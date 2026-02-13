@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ToDoApp</string>
+    <string name="add_task">إضافة مهمة</string>
+    <string name="update">تعديل</string>
+    <string name="update_task">تعديل المهمة</string>
+    <string name="delet">حذف</string>
+    <string name="no_task">لا توجد مهام</string>
+</resources>
