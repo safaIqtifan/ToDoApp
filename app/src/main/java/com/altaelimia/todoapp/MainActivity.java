@@ -1,20 +1,19 @@
 package com.altaelimia.todoapp;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
-import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import android.app.AlertDialog;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
-    TabLayout tabLayout;
     ViewPager2 viewPager;
-    FloatingActionButton fabAdd;
-    ViewPagerAdapter adapter;
+    TabLayout tabLayout;
+    FloatingActionButton fab;
     DatabaseHelper db;
 
     @Override
@@ -24,21 +23,24 @@ public class MainActivity extends AppCompatActivity {
 
         db = new DatabaseHelper(this);
 
-        tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
-        fabAdd = findViewById(R.id.fabAdd);
+        tabLayout = findViewById(R.id.tabLayout);
+        fab = findViewById(R.id.fab);
 
-        adapter = new ViewPagerAdapter(this);
-        viewPager.setAdapter(adapter);
+        viewPager.setAdapter(new ViewPagerAdapter(this));
 
         new TabLayoutMediator(tabLayout, viewPager,
-                (tab, position) -> tab.setText(position == 0 ? "Todo" : "Done")
-        ).attach();
+                (tab, position) -> {
+                    if(position == 0)
+                        tab.setText("Todo");
+                    else
+                        tab.setText("Done");
+                }).attach();
 
-        fabAdd.setOnClickListener(v -> showAddDialog());
+        fab.setOnClickListener(v -> showAddDialog());
     }
 
-    private void showAddDialog() {
+    private void showAddDialog(){
         EditText editText = new EditText(this);
 
         new AlertDialog.Builder(this)
@@ -46,16 +48,16 @@ public class MainActivity extends AppCompatActivity {
                 .setView(editText)
                 .setPositiveButton("إضافة", (dialog, which) -> {
                     String title = editText.getText().toString().trim();
-                    if (!title.isEmpty()) {
-                        db.insertData(title);
-
-                        // إعادة تحميل التبويب الحالي
-                        int currentTab = viewPager.getCurrentItem();
-                        TaskFragment fragment = adapter.getFragment(currentTab);
-                        if(fragment != null) fragment.loadData();
+                    if(!title.isEmpty()){
+                        db.insertTask(title);
+                        refreshFragments();
                     }
                 })
                 .setNegativeButton("إلغاء", null)
                 .show();
+    }
+
+    public void refreshFragments(){
+        viewPager.setAdapter(new ViewPagerAdapter(this));
     }
 }
