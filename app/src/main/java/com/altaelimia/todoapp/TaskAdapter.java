@@ -18,11 +18,11 @@ import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
-    private final View.OnClickListener onClickListener;
+    private final CallBackListener onCallBackListener;
     Context context;
-//    ArrayList<String> ids, titles;
+    //    ArrayList<String> ids, titles;
     int status;
-//    DatabaseHelper db;
+    //    DatabaseHelper db;
     List<Task> taskList;
     TaskDao taskDao;
 
@@ -38,11 +38,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 //        db = new DatabaseHelper(context);
 //    }
 
-    public TaskAdapter(Context context, List<Task> taskList, int status, View.OnClickListener onClickListener) {
+    public TaskAdapter(Context context, List<Task> taskList, int status, CallBackListener onCallBackListener) {
         this.context = context;
         this.taskList = taskList;
         this.status = status;
-        this.onClickListener = onClickListener;
+        this.onCallBackListener = onCallBackListener;
         this.taskDao = RoomAppDatabase.getInstance(context).taskDao();
     }
 
@@ -73,7 +73,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         holder.binding.txtTitle.setText(task.title);
 //        holder.binding.checkBox.setOnCheckedChangeListener(null);
 
-        if(task.isChecked){
+        if (task.isChecked) {
 
             holder.binding.checkBox.setChecked(true);
 
@@ -86,17 +86,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
                     holder.binding.txtTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)
             );
         }
-
-        holder.binding.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-//            RoomAppDatabase.getInstance(context)
+        holder.binding.checkBox.setOnClickListener(view -> {
+            //            RoomAppDatabase.getInstance(context)
 //                    .taskDao()
 //                    .updateStatus(task.id, isChecked ? 1 : 0);
 //            task.isChecked = isChecked ? 1 : 0;
+            boolean isChecked = holder.binding.checkBox.isChecked();
 
             task.setChecked(isChecked);
 
             taskDao.update(task);
             notifyDataSetChanged();
+            // this the calling on listener
+            onCallBackListener.onCallBack(task);// if i add paramater >> i should pass it here
 //            taskDao.getAllTasks();
         });
 
@@ -121,7 +123,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         return taskList.size();
     }
 
-    public Task getTaskAt(int position){
+    public Task getTaskAt(int position) {
         return taskList.get(position);
     }
 

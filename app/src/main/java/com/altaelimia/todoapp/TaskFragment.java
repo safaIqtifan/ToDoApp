@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.altaelimia.todoapp.databinding.FragmentTaskBinding;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +41,6 @@ public class TaskFragment extends Fragment {
 //    TextView txtEmpty;
 
     List<Task> taskList;
-    List<Task> comTaskList;
 
     private TaskAdapter adapter;
     RoomAppDatabase db;
@@ -71,18 +75,18 @@ public class TaskFragment extends Fragment {
 //        dbs = new DatabaseHelper(requireContext());
 //        db = new DatabaseHelper(getContext());
 
+        db = RoomAppDatabase.getInstance(getContext());
+        taskDao = db.taskDao();
+        taskList = new ArrayList<>();
+        tasks = new ArrayList<>();
+
         if (getArguments() != null) {
             status = getArguments().getInt(ARG_STATUS);
         }
 
-
         binding.recyclerView.setLayoutManager(
                 new LinearLayoutManager(requireContext())
         );
-
-        db = RoomAppDatabase.getInstance(getContext());
-        taskDao = db.taskDao();
-        tasks = new ArrayList<>();
 
         loadTasks();
         setupSwipe();
@@ -108,22 +112,59 @@ public class TaskFragment extends Fragment {
         return binding.getRoot();
     }
 
-    private void loadTasks() {
-
+    private List<Task> getTasksList() {
+        List<Task> list;
         if (status == 1) {
-            tasks = taskDao.getTasksIsChecked(true);
+            list = taskDao.getTasksIsChecked(true);
         } else {
-            tasks = taskDao.getTasksIsChecked(false);
+            list = taskDao.getTasksIsChecked(false);
         }
-        checkTasks();
-        adapter = new TaskAdapter(getContext(), tasks, status,view -> {
-            tasks = taskDao.getAllTasks();
-        });
+        return list;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onTabChanged(TabChangedEvent event) {
+
+        Log.d("EVENT_TEST", "Tab Changed: " + event.tabPosition);
+
+        loadTasks();
+
+        if (event.tabPosition == 0) {
+//            list = taskDao.getTasksIsChecked(false);
+            loadToDoTasks();
+        } else {
+//            list = taskDao.getTasksIsChecked(true);
+            loadCompletedTasks();
+        }
+    }
+
+    private void loadToDoTasks() {
+        taskList.clear();
+        taskList.addAll(taskDao.getPendingTasks());
+        adapter.notifyDataSetChanged();
+    }
+
+    private void loadCompletedTasks() {
+        taskList.clear();
+        taskList.addAll(taskDao.getCompletedTasks());
+        adapter.notifyDataSetChanged();
+    }
+
+    private void loadTasks() {
+        tasks = getTasksList();
+        // here what type you enter between <> the object in this type
+        CallBackListener<Task> callBackListener = object -> {
+            // this code this performed when calling the listener inside adapter
+            tasks = getTasksList();
+            adapter.taskList = tasks;
+            adapter.notifyDataSetChanged();
+        };
+        adapter = new TaskAdapter(getContext(), tasks, status, callBackListener);
         binding.recyclerView.setAdapter(adapter);
     }
 
     private void checkTasks() {
-//        List<Task> tasks = database.taskDao().getAllTasks();
+        List<Task> tasks = taskDao.getAllTasks();
 
         if (tasks.isEmpty()) {
             binding.txtEmpty.setVisibility(View.VISIBLE);
@@ -286,6 +327,18 @@ public class TaskFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
 }

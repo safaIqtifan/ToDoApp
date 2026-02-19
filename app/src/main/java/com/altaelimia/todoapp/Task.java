@@ -17,6 +17,9 @@ public class Task {
 //    @ColumnInfo(name = "status")
 //    public int status;
 
+    @ColumnInfo(name = "isCompleted")
+    private boolean isCompleted;
+
     @ColumnInfo(name = "isChecked")
     public boolean isChecked;
 
@@ -32,13 +35,13 @@ public class Task {
 //        this.isChecked = isChecked;
 //    }
 
-//    public int getId() {
-//        return id;
-//    }
-//
-//    public void setId(int id) {
-//        this.id = id;
-//    }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getTitle() {
         return title;
@@ -54,6 +57,14 @@ public class Task {
 
     public void setChecked(boolean checked) {
         isChecked = checked;
+    }
+
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
+    public void setCompleted(boolean completed) {
+        isCompleted = completed;
     }
 
     //    public boolean isChecked() {

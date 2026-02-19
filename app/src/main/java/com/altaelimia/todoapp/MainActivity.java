@@ -13,6 +13,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.app.AlertDialog;
 import android.widget.EditText;
 
+import org.greenrobot.eventbus.EventBus;
+
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
@@ -40,6 +42,17 @@ public class MainActivity extends AppCompatActivity {
 //        fab = findViewById(R.id.fab);
 
         binding.viewPager.setAdapter(new ViewPagerAdapter(this));
+
+        binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                EventBus.getDefault().post(new TabChangedEvent(tab.getPosition()));
+            }
+
+            @Override public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
+        });
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager,
                 (tab, position) -> {

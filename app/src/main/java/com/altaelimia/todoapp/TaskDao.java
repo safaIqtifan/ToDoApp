@@ -27,6 +27,12 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks WHERE isChecked = :isChecked")
     List<Task> getTasksIsChecked(boolean isChecked);
 
+    @Query("SELECT * FROM tasks WHERE isChecked = 0")
+    List<Task> getPendingTasks();
+
+    @Query("SELECT * FROM tasks WHERE isChecked = 1")
+    List<Task> getCompletedTasks();
+
 
 //    @Query("SELECT * FROM tasks WHERE status = :status")
 //    LiveData<List<Task>> getTasksByStatus(int status);
