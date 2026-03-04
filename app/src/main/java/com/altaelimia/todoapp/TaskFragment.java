@@ -1,7 +1,6 @@
 package com.altaelimia.todoapp;
 
 import android.app.AlertDialog;
-import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -19,6 +17,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.altaelimia.todoapp.database.RoomAppDatabase;
+import com.altaelimia.todoapp.database.TaskDao;
 import com.altaelimia.todoapp.databinding.FragmentTaskBinding;
 
 import org.greenrobot.eventbus.EventBus;
@@ -113,13 +113,7 @@ public class TaskFragment extends Fragment {
     }
 
     private List<Task> getTasksList() {
-        List<Task> list;
-        if (status == 1) {
-            list = taskDao.getTasksIsChecked(true);
-        } else {
-            list = taskDao.getTasksIsChecked(false);
-        }
-        return list;
+        return taskDao.getTasksIsChecked(status == 1);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -129,6 +123,7 @@ public class TaskFragment extends Fragment {
 
         loadTasks();
 
+        // its wrong to redundant this
         if (event.tabPosition == 0) {
 //            list = taskDao.getTasksIsChecked(false);
             loadToDoTasks();
@@ -155,9 +150,9 @@ public class TaskFragment extends Fragment {
         // here what type you enter between <> the object in this type
         CallBackListener<Task> callBackListener = object -> {
             // this code this performed when calling the listener inside adapter
+            //use notify removed when user check to the task , no need to update all items
             tasks = getTasksList();
-            adapter.taskList = tasks;
-            adapter.notifyDataSetChanged();
+            adapter.updateTaskList(tasks);
         };
         adapter = new TaskAdapter(getContext(), tasks, status, callBackListener);
         binding.recyclerView.setAdapter(adapter);

@@ -3,28 +3,26 @@ package com.altaelimia.todoapp;
 import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.altaelimia.todoapp.database.RoomAppDatabase;
+import com.altaelimia.todoapp.database.TaskDao;
 import com.altaelimia.todoapp.databinding.ItemTaskBinding;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
     private final CallBackListener onCallBackListener;
-    Context context;
+    private Context context;
     //    ArrayList<String> ids, titles;
-    int status;
+    private int status;
     //    DatabaseHelper db;
-    List<Task> taskList;
-    TaskDao taskDao;
+    private List<Task> taskList;
+    private TaskDao taskDao;
 
 //    public TaskAdapter(Context context,
 //                       ArrayList<String> ids,
@@ -50,17 +48,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 //        return taskList.get(position);
 //    }
 
+    public void updateTaskList(List<Task> taskList) {
+        this.taskList = taskList;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
-//        View view = LayoutInflater.from(context)
-//               .inflate(R.layout.item_task, parent, false);
-
-        ItemTaskBinding binding = ItemTaskBinding.inflate(
-                LayoutInflater.from(context), parent, false);
-
-        return new ViewHolder(binding);
+        return new ViewHolder(ItemTaskBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
     @Override
@@ -96,7 +92,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
             task.setChecked(isChecked);
 
             taskDao.update(task);
-            notifyDataSetChanged();
+            notifyItemChanged(holder.getBindingAdapterPosition());
             // this the calling on listener
             onCallBackListener.onCallBack(task);// if i add paramater >> i should pass it here
 //            taskDao.getAllTasks();

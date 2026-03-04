@@ -1,9 +1,11 @@
-package com.altaelimia.todoapp;
+package com.altaelimia.todoapp.database;
 
 import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+
+import com.altaelimia.todoapp.Task;
 
 @Database(entities = {Task.class}, version = 4)
 public abstract class RoomAppDatabase extends RoomDatabase {
