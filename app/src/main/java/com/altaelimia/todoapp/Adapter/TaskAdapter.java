@@ -1,42 +1,28 @@
-package com.altaelimia.todoapp;
+package com.altaelimia.todoapp.Adapter;
 
 import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.altaelimia.todoapp.CallBack.CallBackListener;
+import com.altaelimia.todoapp.Database.RoomAppDatabase;
+import com.altaelimia.todoapp.Class.Task;
+import com.altaelimia.todoapp.CallBack.TaskDao;
 import com.altaelimia.todoapp.databinding.ItemTaskBinding;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
     private final CallBackListener onCallBackListener;
     Context context;
-    //    ArrayList<String> ids, titles;
-    int status;
-    //    DatabaseHelper db;
-    List<Task> taskList;
-    TaskDao taskDao;
-
-//    public TaskAdapter(Context context,
-//                       ArrayList<String> ids,
-//                       ArrayList<String> titles,
-//                       int status) {
-//
-//        this.context = context;
-//        this.ids = ids;
-//        this.titles = titles;
-//        this.status = status;
-//        db = new DatabaseHelper(context);
-//    }
+    private int status;
+    private List<Task> taskList;
+    private TaskDao taskDao;
 
     public TaskAdapter(Context context, List<Task> taskList, int status, CallBackListener onCallBackListener) {
         this.context = context;
@@ -46,21 +32,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         this.taskDao = RoomAppDatabase.getInstance(context).taskDao();
     }
 
-//    public Task getTaskAt(int position) {
-//        return taskList.get(position);
-//    }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-//        View view = LayoutInflater.from(context)
-//               .inflate(R.layout.item_task, parent, false);
+//        ItemTaskBinding binding = ItemTaskBinding.inflate(
+//                LayoutInflater.from(context), parent, false);
 
-        ItemTaskBinding binding = ItemTaskBinding.inflate(
-                LayoutInflater.from(context), parent, false);
-
-        return new ViewHolder(binding);
+        return new ViewHolder(ItemTaskBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
     @Override
@@ -68,10 +48,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
         Task task = taskList.get(position);
 
-//        holder.binding.txtTitle.setText(titles.get(position));
-
         holder.binding.txtTitle.setText(task.title);
-//        holder.binding.checkBox.setOnCheckedChangeListener(null);
 
         if (task.isChecked) {
 
@@ -87,35 +64,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
             );
         }
         holder.binding.checkBox.setOnClickListener(view -> {
-            //            RoomAppDatabase.getInstance(context)
-//                    .taskDao()
-//                    .updateStatus(task.id, isChecked ? 1 : 0);
-//            task.isChecked = isChecked ? 1 : 0;
             boolean isChecked = holder.binding.checkBox.isChecked();
 
             task.setChecked(isChecked);
 
             taskDao.update(task);
-            notifyDataSetChanged();
+            notifyItemChanged(holder.getBindingAdapterPosition());
+//            notifyDataSetChanged();
             // this the calling on listener
             onCallBackListener.onCallBack(task);// if i add paramater >> i should pass it here
-//            taskDao.getAllTasks();
         });
-
-//        holder.binding.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-//
-//            String id = ids.get(position);
-//
-//            if(isChecked){
-//                db.updateStatus(id, 1);
-//            } else {
-//                db.updateStatus(id, 0);
-//            }
-//
-//            if(context instanceof MainActivity){
-//                ((MainActivity) context).refreshFragments();
-//            }
-//        });
     }
 
     @Override
@@ -129,17 +87,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-//        TextView txtTitle;
-//        CheckBox checkBox;
-
         ItemTaskBinding binding;
 
         public ViewHolder(ItemTaskBinding binding) {
-//            super(itemView);
             super(binding.getRoot());
             this.binding = binding;
-//            txtTitle = itemView.findViewById(R.id.txtTitle);
-//            checkBox = itemView.findViewById(R.id.checkBox);
         }
+    }
+
+    public void updateTaskList(List<Task> taskList) {
+        this.taskList = taskList;
+        notifyDataSetChanged();
     }
 }

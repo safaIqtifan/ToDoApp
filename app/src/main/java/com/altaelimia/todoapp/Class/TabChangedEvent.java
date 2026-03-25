@@ -1,4 +1,4 @@
-package com.altaelimia.todoapp;
+package com.altaelimia.todoapp.Class;
 
 public class TabChangedEvent {
     public int tabPosition;

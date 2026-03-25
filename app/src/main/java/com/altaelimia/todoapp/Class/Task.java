@@ -1,4 +1,4 @@
-package com.altaelimia.todoapp;
+package com.altaelimia.todoapp.Class;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -14,9 +14,6 @@ public class Task {
     @ColumnInfo(name = "title")
     public String title;
 
-//    @ColumnInfo(name = "status")
-//    public int status;
-
     @ColumnInfo(name = "isCompleted")
     private boolean isCompleted;
 
@@ -28,12 +25,6 @@ public class Task {
         this.title = title;
         this.isChecked = isChecked;
     }
-
-//    public Task(int id, String title, boolean isChecked) {
-//        this.id = id;
-//        this.title = title;
-//        this.isChecked = isChecked;
-//    }
 
     public int getId() {
         return id;
@@ -66,21 +57,5 @@ public class Task {
     public void setCompleted(boolean completed) {
         isCompleted = completed;
     }
-
-    //    public boolean isChecked() {
-//        return isChecked;
-//    }
-//
-//    public void setChecked(boolean isChecked) {
-//        this.isChecked = isChecked;
-//    }
-
-//    public int getStatus() {
-//        return status;
-//    }
-//
-//    public void setStatus(int status) {
-//        this.status = status;
-//    }
 }
 

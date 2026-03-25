@@ -1,7 +1,6 @@
-package com.altaelimia.todoapp;
+package com.altaelimia.todoapp.fragment;
 
 import android.app.AlertDialog;
-import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -19,6 +17,12 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.altaelimia.todoapp.Adapter.TaskAdapter;
+import com.altaelimia.todoapp.CallBack.CallBackListener;
+import com.altaelimia.todoapp.CallBack.TaskDao;
+import com.altaelimia.todoapp.Database.RoomAppDatabase;
+import com.altaelimia.todoapp.Class.TabChangedEvent;
+import com.altaelimia.todoapp.Class.Task;
 import com.altaelimia.todoapp.databinding.FragmentTaskBinding;
 
 import org.greenrobot.eventbus.EventBus;
@@ -34,14 +38,7 @@ public class TaskFragment extends Fragment {
     private int status;
     private FragmentTaskBinding binding;
     List<Task> tasks;
-
-//    private DatabaseHelper dbs;
-//    DatabaseHelper db;
-//    RecyclerView recyclerView;
-//    TextView txtEmpty;
-
     List<Task> taskList;
-
     private TaskAdapter adapter;
     RoomAppDatabase db;
     private TaskDao taskDao;
@@ -65,15 +62,7 @@ public class TaskFragment extends Fragment {
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-//        View view = inflater.inflate(R.layout.fragment_task, container, false);
-
-//        recyclerView = view.findViewById(R.id.recyclerView);
-//        txtEmpty = view.findViewById(R.id.txtEmpty);
-
-//        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding = FragmentTaskBinding.inflate(inflater, container, false);
-//        dbs = new DatabaseHelper(requireContext());
-//        db = new DatabaseHelper(getContext());
 
         db = RoomAppDatabase.getInstance(getContext());
         taskDao = db.taskDao();
@@ -91,35 +80,17 @@ public class TaskFragment extends Fragment {
         loadTasks();
         setupSwipe();
 
-//        taskDao.getTasksByStatus(status)
-//                .observe(getViewLifecycleOwner(), tasks -> {
-//
-//                    if (tasks.isEmpty()) {
-//                        binding.txtEmpty.setVisibility(View.VISIBLE);
-//                        binding.recyclerView.setVisibility(View.GONE);
-//                    } else {
-//                        binding.txtEmpty.setVisibility(View.GONE);
-//                        binding.recyclerView.setVisibility(View.VISIBLE);
-//
-//                        adapter = new TaskAdapter(requireContext(), tasks);
-//                        binding.recyclerView.setAdapter(adapter);
-//                    }
-//                });
-
-//        loadData();
-
-
         return binding.getRoot();
     }
 
     private List<Task> getTasksList() {
-        List<Task> list;
-        if (status == 1) {
-            list = taskDao.getTasksIsChecked(true);
-        } else {
-            list = taskDao.getTasksIsChecked(false);
-        }
-        return list;
+//        List<Task> list;
+//        if (status == 1) {
+//            list = taskDao.getTasksIsChecked(true);
+//        } else {
+//            list = taskDao.getTasksIsChecked(false);
+//        }
+        return taskDao.getTasksIsChecked(status == 1);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -156,8 +127,9 @@ public class TaskFragment extends Fragment {
         CallBackListener<Task> callBackListener = object -> {
             // this code this performed when calling the listener inside adapter
             tasks = getTasksList();
-            adapter.taskList = tasks;
-            adapter.notifyDataSetChanged();
+//            adapter.taskList = tasks;
+//            adapter.notifyDataSetChanged();
+            adapter.updateTaskList(tasks);
         };
         adapter = new TaskAdapter(getContext(), tasks, status, callBackListener);
         binding.recyclerView.setAdapter(adapter);
@@ -180,31 +152,6 @@ public class TaskFragment extends Fragment {
         super.onResume();
         checkTasks();
     }
-
-
-//    private void loadData() {
-//
-//        taskList = new ArrayList<>();
-//        comTaskList = new ArrayList<>();
-//
-//        Cursor cursor = db.getTasksByStatus(status);
-//
-//        while(cursor.moveToNext()){
-//            taskList.add(cursor.getString(0));
-//            comTaskList.add(cursor.getString(1));
-//        }
-//
-//        if(comTaskList.isEmpty()){
-//            binding.txtEmpty.setVisibility(View.VISIBLE);
-//            binding.recyclerView.setVisibility(View.GONE);
-//        } else {
-//            binding.txtEmpty.setVisibility(View.GONE);
-//            binding.recyclerView.setVisibility(View.VISIBLE);
-//
-//            adapter = new TaskAdapter(getContext(), taskList, comTaskList, status);
-//            binding.recyclerView.setAdapter(adapter);
-//        }
-//    }
 
     private void setupSwipe() {
 
@@ -231,17 +178,12 @@ public class TaskFragment extends Fragment {
                                          int direction) {
 
                         int position = viewHolder.getAdapterPosition();
-//                        String id = ids.get(position);
                         Task task = adapter.getTaskAt(position);
 
                         if (direction == ItemTouchHelper.RIGHT) {
                             taskDao.delete(task);
-//                            db.deleteTask(id);
-//                            ids.remove(position);
-//                            titles.remove(position);
                             adapter.notifyItemRemoved(position);
                         } else if (direction == ItemTouchHelper.LEFT) {
-
                             showEditDialog(task);
                             adapter.notifyItemChanged(position);
                         }
@@ -257,9 +199,6 @@ public class TaskFragment extends Fragment {
 
                         View itemView = viewHolder.itemView;
                         float margin = 40;
-
-//                        if(actionState == ItemTouchHelper.ACTION_STATE_SWIPE){
-
                         if (dX > 0) {
                             paint.setColor(Color.RED);
                             c.drawRect(itemView.getLeft(),
@@ -289,7 +228,6 @@ public class TaskFragment extends Fragment {
                                     itemView.getTop() + itemView.getHeight() / 2 + 20,
                                     paint);
                         }
-//                        }
 
                         super.onChildDraw(c, recyclerView, viewHolder,
                                 dX, dY, actionState, isCurrentlyActive);
@@ -312,12 +250,6 @@ public class TaskFragment extends Fragment {
 
                     task.title = editText.getText().toString().trim();
                     taskDao.update(task);
-
-//                    if(!newTitle.isEmpty()){
-//                        db.updateTitle(ids.get(position), newTitle);
-//                        titles.set(position, newTitle);
-//                        adapter.notifyItemChanged(position);
-//                    }
                 })
                 .setNegativeButton("إلغاء", null)
                 .show();
