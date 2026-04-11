@@ -9,11 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.altaelimia.todoapp.CallBack.CallBackListener;
-import com.altaelimia.todoapp.Database.RoomAppDatabase;
 import com.altaelimia.todoapp.Class.Task;
-import com.altaelimia.todoapp.CallBack.TaskDao;
 import com.altaelimia.todoapp.databinding.ItemTaskBinding;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
@@ -21,25 +20,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
     private final CallBackListener onCallBackListener;
     Context context;
     private int status;
-    private List<Task> taskList;
-    private TaskDao taskDao;
+    private List<Task> taskList = new ArrayList<>();
 
     public TaskAdapter(Context context, List<Task> taskList, int status, CallBackListener onCallBackListener) {
         this.context = context;
         this.taskList = taskList;
         this.status = status;
         this.onCallBackListener = onCallBackListener;
-        this.taskDao = RoomAppDatabase.getInstance(context).taskDao();
     }
-
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
-//        ItemTaskBinding binding = ItemTaskBinding.inflate(
-//                LayoutInflater.from(context), parent, false);
-
         return new ViewHolder(ItemTaskBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
@@ -47,13 +39,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
         Task task = taskList.get(position);
-
         holder.binding.txtTitle.setText(task.title);
 
         if (task.isChecked) {
 
             holder.binding.checkBox.setChecked(true);
-
             holder.binding.txtTitle.setPaintFlags(
                     holder.binding.txtTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG
             );
@@ -67,12 +57,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
             boolean isChecked = holder.binding.checkBox.isChecked();
 
             task.setChecked(isChecked);
-
-            taskDao.update(task);
-            notifyItemChanged(holder.getBindingAdapterPosition());
-//            notifyDataSetChanged();
-            // this the calling on listener
-            onCallBackListener.onCallBack(task);// if i add paramater >> i should pass it here
+            onCallBackListener.onCallBack(task);
         });
     }
 
@@ -95,8 +80,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         }
     }
 
-    public void updateTaskList(List<Task> taskList) {
-        this.taskList = taskList;
+    public void setTasks(List<Task> tasks) {
+        this.taskList = tasks;
         notifyDataSetChanged();
     }
 }

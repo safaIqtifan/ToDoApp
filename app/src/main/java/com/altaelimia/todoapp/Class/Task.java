@@ -14,13 +14,12 @@ public class Task {
     @ColumnInfo(name = "title")
     public String title;
 
-    @ColumnInfo(name = "isCompleted")
-    private boolean isCompleted;
-
     @ColumnInfo(name = "isChecked")
     public boolean isChecked;
 
-
+    public Task() {
+    }
+    
     public Task(String title, boolean isChecked) {
         this.title = title;
         this.isChecked = isChecked;
@@ -50,12 +49,5 @@ public class Task {
         isChecked = checked;
     }
 
-    public boolean isCompleted() {
-        return isCompleted;
-    }
-
-    public void setCompleted(boolean completed) {
-        isCompleted = completed;
-    }
 }
 

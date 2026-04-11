@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,35 +12,26 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.altaelimia.todoapp.Adapter.TaskAdapter;
 import com.altaelimia.todoapp.CallBack.CallBackListener;
-import com.altaelimia.todoapp.CallBack.TaskDao;
-import com.altaelimia.todoapp.Database.RoomAppDatabase;
-import com.altaelimia.todoapp.Class.TabChangedEvent;
 import com.altaelimia.todoapp.Class.Task;
+import com.altaelimia.todoapp.ViewModel.TaskViewModel;
 import com.altaelimia.todoapp.databinding.FragmentTaskBinding;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.ArrayList;
-import java.util.List;
 
-public class TaskFragment extends Fragment {
+public class TaskFragment extends Fragment implements CallBackListener {
 
     private static final String ARG_STATUS = "status";
     private int status;
     private FragmentTaskBinding binding;
-    List<Task> tasks;
-    List<Task> taskList;
     private TaskAdapter adapter;
-    RoomAppDatabase db;
-    private TaskDao taskDao;
+    TaskViewModel viewModel;
 
     public TaskFragment() {
     }
@@ -63,94 +53,33 @@ public class TaskFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         binding = FragmentTaskBinding.inflate(inflater, container, false);
-
-        db = RoomAppDatabase.getInstance(getContext());
-        taskDao = db.taskDao();
-        taskList = new ArrayList<>();
-        tasks = new ArrayList<>();
+        viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
         if (getArguments() != null) {
             status = getArguments().getInt(ARG_STATUS);
         }
+        adapter = new TaskAdapter(requireContext(), new ArrayList<>(), status, this);
+        binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerView.setAdapter(adapter);
 
-        binding.recyclerView.setLayoutManager(
-                new LinearLayoutManager(requireContext())
-        );
-
-        loadTasks();
         setupSwipe();
 
         return binding.getRoot();
     }
 
-    private List<Task> getTasksList() {
-//        List<Task> list;
-//        if (status == 1) {
-//            list = taskDao.getTasksIsChecked(true);
-//        } else {
-//            list = taskDao.getTasksIsChecked(false);
-//        }
-        return taskDao.getTasksIsChecked(status == 1);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onTabChanged(TabChangedEvent event) {
-
-        Log.d("EVENT_TEST", "Tab Changed: " + event.tabPosition);
-
-        loadTasks();
-
-        if (event.tabPosition == 0) {
-//            list = taskDao.getTasksIsChecked(false);
-            loadToDoTasks();
-        } else {
-//            list = taskDao.getTasksIsChecked(true);
-            loadCompletedTasks();
-        }
-    }
-
-    private void loadToDoTasks() {
-        taskList.clear();
-        taskList.addAll(taskDao.getPendingTasks());
-        adapter.notifyDataSetChanged();
-    }
-
-    private void loadCompletedTasks() {
-        taskList.clear();
-        taskList.addAll(taskDao.getCompletedTasks());
-        adapter.notifyDataSetChanged();
-    }
-
-    private void loadTasks() {
-        tasks = getTasksList();
-        // here what type you enter between <> the object in this type
-        CallBackListener<Task> callBackListener = object -> {
-            // this code this performed when calling the listener inside adapter
-            tasks = getTasksList();
-//            adapter.taskList = tasks;
-//            adapter.notifyDataSetChanged();
-            adapter.updateTaskList(tasks);
-        };
-        adapter = new TaskAdapter(getContext(), tasks, status, callBackListener);
-        binding.recyclerView.setAdapter(adapter);
-    }
-
     private void checkTasks() {
-        List<Task> tasks = taskDao.getAllTasks();
 
-        if (tasks.isEmpty()) {
-            binding.txtEmpty.setVisibility(View.VISIBLE);
-            binding.recyclerView.setVisibility(View.GONE);
-        } else {
-            binding.txtEmpty.setVisibility(View.GONE);
-            binding.recyclerView.setVisibility(View.VISIBLE);
-        }
-    }
+        viewModel.getTasksByStatus(status == 1).observe(getViewLifecycleOwner(), tasks -> {
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        checkTasks();
+            adapter.setTasks(tasks);
+
+            if (tasks.isEmpty()) {
+                binding.txtEmpty.setVisibility(View.VISIBLE);
+            } else {
+                binding.txtEmpty.setVisibility(View.GONE);
+            }
+
+        });
     }
 
     private void setupSwipe() {
@@ -181,8 +110,7 @@ public class TaskFragment extends Fragment {
                         Task task = adapter.getTaskAt(position);
 
                         if (direction == ItemTouchHelper.RIGHT) {
-                            taskDao.delete(task);
-                            adapter.notifyItemRemoved(position);
+                            viewModel.delete(task);
                         } else if (direction == ItemTouchHelper.LEFT) {
                             showEditDialog(task);
                             adapter.notifyItemChanged(position);
@@ -249,7 +177,7 @@ public class TaskFragment extends Fragment {
                 .setPositiveButton("حفظ", (dialog, which) -> {
 
                     task.title = editText.getText().toString().trim();
-                    taskDao.update(task);
+                    viewModel.update(task);
                 })
                 .setNegativeButton("إلغاء", null)
                 .show();
@@ -262,15 +190,14 @@ public class TaskFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
+    public void onResume() {
+        super.onResume();
+        checkTasks();
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
+    public void onCallBack(Task task) {
+        viewModel.update(task);
     }
 
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ToDoApp</string>
+    <string name="app_name">To Do App</string>
     <string name="add_task">إضافة مهمة</string>
     <string name="update">تعديل</string>
     <string name="update_task">تعديل المهمة</string>

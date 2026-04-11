@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase;
 import com.altaelimia.todoapp.CallBack.TaskDao;
 import com.altaelimia.todoapp.Class.Task;
 
-@Database(entities = {Task.class}, version = 4)
+@Database(entities = {Task.class}, version = 5)
 public abstract class RoomAppDatabase extends RoomDatabase {
 
     private static RoomAppDatabase instance;
@@ -21,10 +21,9 @@ public abstract class RoomAppDatabase extends RoomDatabase {
             instance = Room.databaseBuilder(
                             context.getApplicationContext(),
                             RoomAppDatabase.class,
-                            "todoapp_database"
+                            "todoapp_databases"
                     )
                     .fallbackToDestructiveMigration()
-                    .allowMainThreadQueries()
                     .build();
         }
 
