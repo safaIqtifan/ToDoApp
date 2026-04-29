@@ -1,13 +1,16 @@
 package com.altaelimia.todoapp.Class;
 
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatEditText;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.altaelimia.todoapp.Adapter.ViewPagerAdapter;
 import com.altaelimia.todoapp.ViewModel.TaskViewModel;
 import com.altaelimia.todoapp.databinding.ActivityMainBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
+
 import android.app.AlertDialog;
 import android.widget.EditText;
 
@@ -50,25 +53,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddDialog() {
-        EditText editText = new EditText(this);
+        final AppCompatEditText editText = new AppCompatEditText(this);
+        editText.setHint("اكتب المهمة هنا...");
 
-        new AlertDialog.Builder(this)
-                .setTitle("إضافة مهمة")
+        int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
+        editText.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+
+//                            viewModel.insert(task);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("إضافة مهمة جديدة")
                 .setView(editText)
-                .setPositiveButton("حفظ", (dialog, which) -> {
+                .setPositiveButton("حفظ", null) // Set to null first to override closing behavior
+                .setNegativeButton("إلغاء", (d, w) -> d.dismiss())
+                .create();
 
-                    String title = editText.getText().toString().trim();
-                    if (title.isEmpty()) return;
+        dialog.setOnShowListener(dialogInterface -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String title = editText.getText().toString().trim();
 
-                    Task task = new Task();
-                    task.title = title;
-                    task.isChecked = false;
+                if (title.isEmpty()) {
+                    editText.setError("لا يمكن أن يكون العنوان فارغاً");
+                } else {
+                    saveTask(title);
+                    dialog.dismiss();
+                }
+            });
+        });
 
-                    viewModel.insert(task);
+        dialog.show();
+    }
 
-                })
-                .setNegativeButton("إلغاء", null)
-                .show();
+    private void saveTask(String title) {
+        Task task = new Task();
+        task.title = title;
+        task.isChecked = false;
+        viewModel.insert(task);
     }
 
 }
