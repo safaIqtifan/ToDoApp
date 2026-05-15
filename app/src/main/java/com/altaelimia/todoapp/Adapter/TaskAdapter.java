@@ -1,87 +1,92 @@
 package com.altaelimia.todoapp.Adapter;
 
-import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.altaelimia.todoapp.CallBack.CallBackListener;
 import com.altaelimia.todoapp.Class.Task;
 import com.altaelimia.todoapp.databinding.ItemTaskBinding;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
+public class TaskAdapter extends ListAdapter<Task, TaskAdapter.ViewHolder> {
 
     private final CallBackListener onCallBackListener;
-    Context context;
-    private int status;
-    private List<Task> taskList = new ArrayList<>();
 
-    public TaskAdapter(Context context, List<Task> taskList, int status, CallBackListener onCallBackListener) {
-        this.context = context;
-        this.taskList = taskList;
-        this.status = status;
+    public TaskAdapter(CallBackListener onCallBackListener) {
+        super(DIFF_CALLBACK);
         this.onCallBackListener = onCallBackListener;
     }
+
+    private static final DiffUtil.ItemCallback<Task> DIFF_CALLBACK = new DiffUtil.ItemCallback<Task>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
+            return oldItem.id == newItem.id;
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
+            return oldItem.isChecked == newItem.isChecked &&
+                    Objects.equals(oldItem.title, newItem.title);
+        }
+    };
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(ItemTaskBinding.inflate(LayoutInflater.from(context), parent, false));
+        ItemTaskBinding binding = ItemTaskBinding.inflate(
+                LayoutInflater.from(parent.getContext()), parent, false);
+        return new ViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
-        Task task = taskList.get(position);
-        holder.binding.txtTitle.setText(task.title);
-
-        if (task.isChecked) {
-
-            holder.binding.checkBox.setChecked(true);
-            holder.binding.txtTitle.setPaintFlags(
-                    holder.binding.txtTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG
-            );
-        } else {
-            holder.binding.checkBox.setChecked(false);
-            holder.binding.txtTitle.setPaintFlags(
-                    holder.binding.txtTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)
-            );
-        }
-        holder.binding.checkBox.setOnClickListener(view -> {
-            boolean isChecked = holder.binding.checkBox.isChecked();
-
-            task.setChecked(isChecked);
-            onCallBackListener.onCallBack(task);
-        });
-    }
-
-    @Override
-    public int getItemCount() {
-        return taskList.size();
+        holder.bind(getItem(position), onCallBackListener);
     }
 
     public Task getTaskAt(int position) {
-        return taskList.get(position);
+        return getItem(position);
+    }
+
+    public void setTasks(List<Task> tasks) {
+        submitList(tasks);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-
-        ItemTaskBinding binding;
+        private final ItemTaskBinding binding;
 
         public ViewHolder(ItemTaskBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
-    }
 
-    public void setTasks(List<Task> tasks) {
-        this.taskList = tasks;
-        notifyDataSetChanged();
+        public void bind(Task task, CallBackListener listener) {
+            binding.txtTitle.setText(task.title);
+            binding.checkBox.setChecked(task.isChecked);
+            
+            updateTitleStyle(task.isChecked);
+
+            binding.checkBox.setOnClickListener(view -> {
+                boolean isChecked = binding.checkBox.isChecked();
+                task.setChecked(isChecked);
+                updateTitleStyle(isChecked);
+                listener.onCallBack(task);
+            });
+        }
+
+        private void updateTitleStyle(boolean isChecked) {
+            if (isChecked) {
+                binding.txtTitle.setPaintFlags(binding.txtTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            } else {
+                binding.txtTitle.setPaintFlags(binding.txtTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            }
+        }
     }
 }

@@ -71,7 +71,7 @@ public class TaskFragment extends Fragment implements CallBackListener {
     }
 
     private void setupRecyclerView() {
-        adapter = new TaskAdapter(requireContext(), new ArrayList<>(), status, this);
+        adapter = new TaskAdapter(this);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerView.setAdapter(adapter);
     }
