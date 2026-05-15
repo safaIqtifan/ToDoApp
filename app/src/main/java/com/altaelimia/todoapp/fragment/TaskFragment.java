@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -21,6 +20,7 @@ import com.altaelimia.todoapp.Adapter.TaskAdapter;
 import com.altaelimia.todoapp.CallBack.CallBackListener;
 import com.altaelimia.todoapp.Class.Task;
 import com.altaelimia.todoapp.ViewModel.TaskViewModel;
+import com.altaelimia.todoapp.databinding.DialogAddTaskBinding;
 import com.altaelimia.todoapp.databinding.FragmentTaskBinding;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class TaskFragment extends Fragment implements CallBackListener {
     private int status;
     private FragmentTaskBinding binding;
     private TaskAdapter adapter;
-    TaskViewModel viewModel;
+    private TaskViewModel viewModel;
 
     public TaskFragment() {
     }
@@ -51,44 +51,48 @@ public class TaskFragment extends Fragment implements CallBackListener {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-
         binding = FragmentTaskBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
         if (getArguments() != null) {
             status = getArguments().getInt(ARG_STATUS);
         }
+        
+        setupRecyclerView();
+        setupSwipe();
+        observeTasks();
+    }
+
+    private void setupRecyclerView() {
         adapter = new TaskAdapter(requireContext(), new ArrayList<>(), status, this);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerView.setAdapter(adapter);
-
-        setupSwipe();
-
-        return binding.getRoot();
     }
 
-    private void checkTasks() {
-
+    private void observeTasks() {
         viewModel.getTasksByStatus(status == 1).observe(getViewLifecycleOwner(), tasks -> {
-
             adapter.setTasks(tasks);
-
-            if (tasks.isEmpty()) {
-                binding.txtEmpty.setVisibility(View.VISIBLE);
-            } else {
-                binding.txtEmpty.setVisibility(View.GONE);
-            }
-
+            binding.txtEmpty.setVisibility(tasks.isEmpty() ? View.VISIBLE : View.GONE);
         });
     }
 
     private void setupSwipe() {
 
+        String deleteText = getString(com.altaelimia.todoapp.R.string.delet);
+        String editTextStr = getString(com.altaelimia.todoapp.R.string.update);
+
         ItemTouchHelper.SimpleCallback simpleCallback =
                 new ItemTouchHelper.SimpleCallback(0,
                         ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 
-                    Paint paint = new Paint();
+                    private final Paint paint = new Paint();
 
                     {
                         paint.setTextSize(50);
@@ -136,9 +140,9 @@ public class TaskFragment extends Fragment implements CallBackListener {
                                     paint);
 
                             paint.setColor(Color.WHITE);
-                            c.drawText("حذف",
+                            c.drawText(deleteText,
                                     itemView.getLeft() + margin,
-                                    itemView.getTop() + itemView.getHeight() / 2 + 20,
+                                    itemView.getTop() + itemView.getHeight() / 2f + 20,
                                     paint);
 
                         } else {
@@ -150,10 +154,10 @@ public class TaskFragment extends Fragment implements CallBackListener {
                                     paint);
 
                             paint.setColor(Color.WHITE);
-                            float textWidth = paint.measureText("تعديل");
-                            c.drawText("تعديل",
+                            float textWidth = paint.measureText(editTextStr);
+                            c.drawText(editTextStr,
                                     itemView.getRight() - textWidth - margin,
-                                    itemView.getTop() + itemView.getHeight() / 2 + 20,
+                                    itemView.getTop() + itemView.getHeight() / 2f + 20,
                                     paint);
                         }
 
@@ -167,19 +171,20 @@ public class TaskFragment extends Fragment implements CallBackListener {
     }
 
     private void showEditDialog(Task task) {
+        DialogAddTaskBinding dialogBinding = DialogAddTaskBinding.inflate(LayoutInflater.from(requireContext()));
+        dialogBinding.etTaskTitle.setText(task.title);
 
-        EditText editText = new EditText(getContext());
-        editText.setText(task.title);
-
-        new AlertDialog.Builder(getContext())
-                .setTitle("تعديل المهمة")
-                .setView(editText)
-                .setPositiveButton("حفظ", (dialog, which) -> {
-
-                    task.title = editText.getText().toString().trim();
-                    viewModel.update(task);
+        new AlertDialog.Builder(requireContext())
+                .setTitle(com.altaelimia.todoapp.R.string.update_task)
+                .setView(dialogBinding.getRoot())
+                .setPositiveButton(com.altaelimia.todoapp.R.string.save, (dialog, which) -> {
+                    String newTitle = dialogBinding.etTaskTitle.getText().toString().trim();
+                    if (!newTitle.isEmpty()) {
+                        task.title = newTitle;
+                        viewModel.update(task);
+                    }
                 })
-                .setNegativeButton("إلغاء", null)
+                .setNegativeButton(com.altaelimia.todoapp.R.string.cancel, null)
                 .show();
     }
 
@@ -187,12 +192,6 @@ public class TaskFragment extends Fragment implements CallBackListener {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        checkTasks();
     }
 
     @Override

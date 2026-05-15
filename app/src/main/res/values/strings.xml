@@ -8,7 +8,7 @@
 
     <string name="todo_tab">Todo</string>
     <string name="done_tab">Done</string>
-    <string name="task_hint">اكتب المهمة هنا...</string>
+    <string name="task_hint">اكتب المهمة هنا&#8230;</string>
     <string name="add_task_title">إضافة مهمة جديدة</string>
     <string name="save">حفظ</string>
     <string name="cancel">إلغاء</string>
