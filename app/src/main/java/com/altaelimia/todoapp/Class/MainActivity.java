@@ -1,24 +1,26 @@
 package com.altaelimia.todoapp.Class;
 
 import android.os.Bundle;
+import android.app.AlertDialog;
+import android.view.LayoutInflater;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatEditText;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.altaelimia.todoapp.Adapter.ViewPagerAdapter;
+import com.altaelimia.todoapp.R;
 import com.altaelimia.todoapp.ViewModel.TaskViewModel;
 import com.altaelimia.todoapp.databinding.ActivityMainBinding;
+import com.altaelimia.todoapp.databinding.DialogAddTaskBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import android.app.AlertDialog;
-import android.widget.EditText;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private ViewPagerAdapter viewPagerAdapter;
-    TaskViewModel viewModel;
+    private TaskViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,51 +30,37 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
-        initializeObjects();
-        viewsActions();
+        initializeUI();
     }
 
-    private void viewsActions() {
+    private void initializeUI() {
+        viewPagerAdapter = new ViewPagerAdapter(this);
+        binding.viewPager.setAdapter(viewPagerAdapter);
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager,
                 (tab, position) -> {
-                    if (position == 0)
-                        tab.setText("Todo");
-                    else
-                        tab.setText("Done");
+                    tab.setText(position == 0 ? R.string.todo_tab : R.string.done_tab);
                 }).attach();
 
         binding.fab.setOnClickListener(v -> showAddDialog());
     }
 
-    private void initializeObjects() {
-
-        viewPagerAdapter = new ViewPagerAdapter(this);
-        binding.viewPager.setAdapter(viewPagerAdapter);
-
-    }
-
     private void showAddDialog() {
-        final AppCompatEditText editText = new AppCompatEditText(this);
-        editText.setHint("اكتب المهمة هنا...");
+        DialogAddTaskBinding dialogBinding = DialogAddTaskBinding.inflate(LayoutInflater.from(this));
 
-        int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
-        editText.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-
-//                            viewModel.insert(task);
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("إضافة مهمة جديدة")
-                .setView(editText)
-                .setPositiveButton("حفظ", null) // Set to null first to override closing behavior
-                .setNegativeButton("إلغاء", (d, w) -> d.dismiss())
+                .setTitle(R.string.add_task_title)
+                .setView(dialogBinding.getRoot())
+                .setPositiveButton(R.string.save, null)
+                .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
                 .create();
 
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String title = editText.getText().toString().trim();
+                String title = Objects.requireNonNull(dialogBinding.etTaskTitle.getText()).toString().trim();
 
                 if (title.isEmpty()) {
-                    editText.setError("لا يمكن أن يكون العنوان فارغاً");
+                    dialogBinding.etTaskTitle.setError(getString(R.string.error_empty_title));
                 } else {
                     saveTask(title);
                     dialog.dismiss();
@@ -84,9 +72,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveTask(String title) {
-        Task task = new Task();
-        task.title = title;
-        task.isChecked = false;
+        Task task = new Task(title, false);
         viewModel.insert(task);
     }
 

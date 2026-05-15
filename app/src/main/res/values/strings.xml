@@ -5,4 +5,12 @@
     <string name="update_task">تعديل المهمة</string>
     <string name="delet">حذف</string>
     <string name="no_task">لا توجد مهام</string>
+
+    <string name="todo_tab">Todo</string>
+    <string name="done_tab">Done</string>
+    <string name="task_hint">اكتب المهمة هنا...</string>
+    <string name="add_task_title">إضافة مهمة جديدة</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="error_empty_title">لا يمكن أن يكون العنوان فارغاً</string>
 </resources>
